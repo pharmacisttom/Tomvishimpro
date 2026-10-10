@@ -1,0 +1,64 @@
+name: TomvisHIMPro CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-security:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: tomvishimpro
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_mysql, mbstring, ctype, json, xml
+          coverage: none
+
+      - name: Validate Composer
+        run: composer validate --strict
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Copy Environment Config
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Run Database Migrations
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: tomvishimpro
+          DB_USERNAME: root
+          DB_PASSWORD: rootpassword
+        run: php scripts/tomvis migrate
+
+      - name: Run Database Seeders
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: tomvishimpro
+          DB_USERNAME: root
+          DB_PASSWORD: rootpassword
+        run: php scripts/tomvis seed
+
+      - name: Execute Automated Test Suite (PHPUnit)
+        run: vendor/bin/phpunit
+
+      - name: Security Audit (Composer Audit)
+        run: composer audit
