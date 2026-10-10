@@ -13,6 +13,8 @@ use Tomvis\HIMPro\Modules\UserManagement\DeveloperDashboardController;
 use Tomvis\HIMPro\Modules\UserManagement\DeveloperStudioController;
 use Tomvis\HIMPro\Modules\PharmacyQueue\PharmacyQueueController;
 
+use Tomvis\HIMPro\Core\Controllers\ErrorCenterController;
+
 /** @var Router $router */
 
 $router->group(['prefix' => '/api/v1'], function (Router $r) {
@@ -25,6 +27,13 @@ $router->group(['prefix' => '/api/v1'], function (Router $r) {
             'timestamp' => date('Y-m-d H:i:s'),
         ], 'System operational.');
     });
+
+    // Central Error Intelligence APIs
+    $r->get('/error-center/metrics', [ErrorCenterController::class, 'metricsApi']);
+    $r->post('/error-center/triage', [ErrorCenterController::class, 'triageApi']);
+    $r->post('/error-center/propose-fix', [ErrorCenterController::class, 'proposeFixApi']);
+    $r->post('/error-center/approve-release', [ErrorCenterController::class, 'approveReleaseApi']);
+    $r->post('/error-collector/js', [ErrorCenterController::class, 'ingestJsErrorApi']);
 
     // Patient APIs
     $r->get('/patients', [PatientController::class, 'searchApi']);

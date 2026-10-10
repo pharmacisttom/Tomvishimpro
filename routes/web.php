@@ -12,6 +12,8 @@ use Tomvis\HIMPro\Modules\UserManagement\DeveloperDashboardController;
 use Tomvis\HIMPro\Modules\UserManagement\DeveloperStudioController;
 use Tomvis\HIMPro\Modules\PharmacyQueue\PharmacyQueueController;
 
+use Tomvis\HIMPro\Core\Controllers\ErrorCenterController;
+
 /** @var Router $router */
 
 $router->get('/', [DashboardController::class, 'index']);
@@ -34,6 +36,10 @@ $router->group(['middleware' => ['auth']], function (Router $r) {
     $r->get('/sandbox', [SandboxController::class, 'index']);
     $r->get('/security', [SecurityLabController::class, 'index']);
     $r->get('/admin/developer', [DeveloperDashboardController::class, 'index']);
+
+    // Central Error Intelligence Dashboard
+    $r->get('/admin/error-center', [ErrorCenterController::class, 'index']);
+    $r->get('/admin/error-center/incident', [ErrorCenterController::class, 'incidentDetail']);
 
     $r->get('/developer', [DeveloperStudioController::class, 'index']);
     $r->get('/developer/api-explorer', [DeveloperStudioController::class, 'apiExplorer']);
