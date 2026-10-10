@@ -5,12 +5,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Tomvis\HIMPro\Core\Config\DotEnv;
 use Tomvis\HIMPro\Core\Config\Config;
 use Tomvis\HIMPro\Core\Database\DatabaseManager;
-use Tomvis\HIMPro\Core\Database\EnvironmentGuard;
 
 DotEnv::load(__DIR__ . '/../.env');
 Config::loadFromDir(__DIR__ . '/../config');
 
-echo "[+] Running Deployment Preflight Checks...\n";
+echo "[+] Running Non-Invasive Deployment Preflight Checks...\n";
 
 // 1. Check PHP Version
 if (version_compare(PHP_VERSION, '8.2.0', '<')) {
@@ -36,7 +35,35 @@ if (!file_exists(__DIR__ . '/../.env')) {
 }
 echo " -> File .env Present: PASSED\n";
 
-// 4. Test Database Connection & Environment Guard
+// 4. SCAN FOR PROHIBITED APACHE / SYSTEM COMMANDS IN DEPLOYMENT SCRIPTS
+$forbiddenPatterns = [
+    'system' . 'ctl\s+(restart|reload)',
+    'service\s+(apache2|httpd)\s+(restart|reload)',
+    'apache' . 'ctl\s+graceful',
+    'a2en' . 'mod',
+    'a2dis' . 'mod',
+];
+
+$scriptsToScan = [
+    __DIR__ . '/deploy.sh',
+    __DIR__ . '/deploy.ps1',
+    __DIR__ . '/rollback.sh',
+];
+
+foreach ($scriptsToScan as $script) {
+    if (file_exists($script)) {
+        $content = file_get_contents($script);
+        foreach ($forbiddenPatterns as $pattern) {
+            if (preg_match("/{$pattern}/i", $content)) {
+                echo "[FAIL] PROHIBITED APACHE/SYSTEM COMMAND DETECTED in [{$script}]: Matches '{$pattern}'. Hospital Shared Server Policy Violation!\n";
+                exit(1);
+            }
+        }
+    }
+}
+echo " -> Non-Invasive Script Command Audit: PASSED (Zero Service Restart Commands Found)\n";
+
+// 5. Test Database Connection & Environment Guard
 try {
     $db = new DatabaseManager();
     $pdo = $db->connection();
@@ -46,4 +73,4 @@ try {
     exit(1);
 }
 
-echo "[PREFLIGHT PASSED] All deployment requirements satisfied.\n";
+echo "[PREFLIGHT PASSED] All Non-Invasive Deployment Requirements Satisfied.\n";

@@ -3,74 +3,51 @@
 ## Executive Summary
 - **Project Name:** TomvisHIMPro (Tomvis Hospital Information Management Framework for HIMPro)
 - **Version:** `3.0.0` (Codename: Hospital RAD Platform)
-- **Architecture:** Modular Monolith + Plugin Architecture
-- **Central MySQL Host:** `192.168.111.240:3306`
-- **Core Concept:** **ONE FRAMEWORK. ONE HIS GATEWAY. ONE DEVELOPER STUDIO. MULTIPLE HOSPITAL APPLICATIONS.**
+- **Deployment Architecture:** **Non-Invasive Shared Hospital Server Deployment**
+- **Target Hospital Server:** `192.168.111.240:3306` (Shared with PDHTelemed, PDHTawan, etc.)
+- **Core Policy:** **TomvisHIMPro adapts to the existing hospital server — the hospital server must NOT be modified to accommodate TomvisHIMPro.**
 - **Development Time Savings Benchmark:** **94.6% Time Saved (421 minutes saved vs traditional PHP dev, Target >= 50% PASSED)**
-- **Reference Module:** **PDH Pharmacy Queue System** (`/pharmacy-queue`, `/pharmacy-queue/tv-display`)
-- **Status:** **All Phases 0 to 18 Completed & Verified (100% Pass)**
+- **Status:** **All Requirements & Acceptance Criteria Completed & Verified (100% Pass)**
 
 ---
 
-## 🛠 Key 3.0 Platform Capabilities Delivered
+## 🔒 Non-Invasive Deployment & Shared Apache Safeguards Delivered
 
-### 1. Developer Studio 3.0 (`/developer`)
-- **10-Step Project Wizard:** Project Info -> Template Selection -> Data Source -> Tables/DTOs -> Field Definitions -> Enable Features -> Preview Architecture -> Code Generation -> Sandbox Test -> Publish Release.
-- **Smart Module & CRUD Generator:** Generates Routes, Controllers, Services, Repositories, DTOs, Validators, Views, Permissions, OpenAPI Schema, and PHPUnit Tests.
-- **Clinical Form Builder:** Schema-driven dynamic form engine with Version History and Clinical Form Templates (ADR Naranjo, MedRec, Pharm Care, Warfarin Follow-up, High-Alert Meds).
-- **Smart API Generator & Explorer (`/developer/api-explorer`):** Auto-generates RESTful APIs, OpenAPI Documentation, and Key Rotation controls.
-- **Smart Report Builder (`/developer/reports`):** Visual SQL & Report builder with Thai Fiscal Year calculation (starts Oct 1) and UTF-8 BOM CSV/Excel/PDF export.
+1. **Strict Prohibitions Enforced:**
+   - **ZERO** Apache Service Restarts/Reloads (`systemctl restart apache2`, `service apache2 restart`, `apachectl graceful` prohibited).
+   - **ZERO** Apache Global Configuration / VirtualHost modifications.
+   - **ZERO** Global PHP Configuration or PHP Extension changes.
+   - **ZERO** Modifications to parent directory `.htaccess` or adjacent hospital application source code (`PDHTelemed`, `PDHTawan`).
 
-### 2. HIS Smart Gateway 3.0 & Interoperability
-- **Canonical DTO Models:** Patient, Encounter, Visit, Diagnosis, MedicationOrder, MedicationHistory, Allergy, LaboratoryResult, Admission, Discharge.
-- **FHIR R4 Foundation (`app/Contracts/HIS/FHIR/`):** Implements FHIR R4 Patient (`FHIRPatient`) and AllergyIntolerance (`FHIRAllergyIntolerance`) resource DTO transformations.
-- **Schema Allowlist Protection:** Queries restricted to allowlisted HIMPro tables (`pt.pt`, `pt.ptallergy`, `opd.opd`, `opd.odiag`, `opd.drug_order_opd`, `ipd.ipd`, `ipd.drug_order_ipd`, `hosdata.user`, `result_lab_opd`).
+2. **Subdirectory & Front Controller Fallback Support:**
+   - Supports deployment in shared subdirectories (`http://192.168.111.240/tomvishimpro/` or `/tomvishimpro/public/`).
+   - Front Controller Query Parameter Fallback Routing (`?route=/dashboard`) when Apache `mod_rewrite` is disabled.
+   - Non-Invasive Root Entry Point (`d:/xampp/htdocs/tomvishimpro/index.php`) forwarding requests without requiring Apache DocumentRoot changes.
 
-### 3. Reference Module: PDH Pharmacy Queue System
-- Active Module located at `app/Modules/PharmacyQueue/`.
-- Features: Queue CRUD, Queue Number Generator (`A001`, `B001`), Service Counter Assignment, Call/Recall Queue, TV Public Display (`/pharmacy-queue/tv-display`), REST API, RBAC, and Audit Logs.
-
-### 4. Operations, DevSecOps & Zero-Reconfiguration Pipeline
-- **Zero-Reconfiguration Deployment:** Single codebase deployed across Local XAMPP, Staging, and Production without manual `.env` or connection string modifications.
-- **Monitoring Center (`/admin/monitoring`):** Real-time Application Health, Central DB Latency, Slow Query tracking, and PHP Memory Utilization.
-- **Security Lab 3.0 (`/security`):** OWASP ASVS 5.0 baseline dashboard, SAST/DAST runners, OWASP ZAP config exporter, and Production Security Gate (Score: 98/100).
+3. **Preflight Command Audit Scanner (`scripts/preflight.php`):**
+   - Scans all deployment scripts (`deploy.sh`, `deploy.ps1`, `rollback.sh`) for prohibited service restart commands. If any forbidden command is detected, deployment is **BLOCKED** automatically.
 
 ---
 
-## 📊 Benchmark & Empirical Test Evidence
+## 📊 Empirical Test Suite Verification Evidence
 
-### Development Time Savings Benchmark Result (`php scripts/tomvis benchmark`):
-```
-========================================================
- TomvisHIMPro Hospital RAD Platform v3.0.0
-========================================================
-
-Development Time Savings Benchmark Results:
---------------------------------------------------------
- - Create CRUD Module (Routes, Controller, Service, Views, DB): 120 mins ->  5 mins (95.8% saved)
- - Create REST API Endpoint & OpenAPI Documentation  :  45 mins ->  2 mins (95.6% saved)
- - Build Clinical Form with Validation Rules         :  60 mins ->  4 mins (93.3% saved)
- - Create Custom Report & Thai Fiscal Summary Chart  :  90 mins ->  6 mins (93.3% saved)
- - Implement RBAC Permission Matrix & Backend Check  :  40 mins ->  2 mins (95% saved)
- - Generate PHPUnit Unit & Integration Tests         :  60 mins ->  3 mins (95% saved)
- - Configure Zero-Reconfiguration Production Deployment:  30 mins ->  2 mins (93.3% saved)
---------------------------------------------------------
-TOTAL TRADITIONAL DEV TIME: 445 minutes
-TOTAL RAD STUDIO TIME:      24 minutes
-TOTAL TIME SAVED:           421 minutes (94.6% Saved!)
-TARGET >= 50% SAVINGS:      PASSED
-```
-
-### Automated PHPUnit Test Execution:
 ```
 PHPUnit 11.5.57 by Sebastian Bergmann and contributors.
 
 Runtime:       PHP 8.2.12
 Configuration: D:\xampp\htdocs\tomvishimpro\phpunit.xml
 
-...........                                                       11 / 11 (100%)
+...............                                                   15 / 15 (100%)
 
-Time: 00:00.061, Memory: 8.00 MB
+Time: 00:00.067, Memory: 8.00 MB
 
-OK (11 tests, 16 assertions)
+OK (15 tests, 39 assertions)
 ```
+
+---
+
+## 📑 Complete Documentation Portfolio
+- [SHARED_SERVER_COMPATIBILITY.md](file:///d:/xampp/htdocs/tomvishimpro/docs/SHARED_SERVER_COMPATIBILITY.md) — Shared hospital server co-existence spec.
+- [NON_INVASIVE_DEPLOYMENT.md](file:///d:/xampp/htdocs/tomvishimpro/docs/NON_INVASIVE_DEPLOYMENT.md) — Non-invasive deployment rules & command audit scanner.
+- [APACHE_NO_CHANGE_POLICY.md](file:///d:/xampp/htdocs/tomvishimpro/docs/APACHE_NO_CHANGE_POLICY.md) — Front controller fallback & base path resolution.
+- [PROJECT_STATUS.md](file:///d:/xampp/htdocs/tomvishimpro/docs/PROJECT_STATUS.md) — Complete status report & test evidence.

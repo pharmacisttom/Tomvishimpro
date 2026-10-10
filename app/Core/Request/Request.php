@@ -2,6 +2,8 @@
 
 namespace Tomvis\HIMPro\Core\Request;
 
+use Tomvis\HIMPro\Core\Config\Config;
+
 class Request
 {
     protected array $query;
@@ -41,11 +43,32 @@ class Request
 
     public function getUri(): string
     {
+        // 1. Front Controller Fallback Routing (?route=/dashboard)
+        if (isset($this->query['route']) && !empty($this->query['route'])) {
+            $route = '/' . trim((string)$this->query['route'], '/');
+            return $route === '/' ? '/' : $route;
+        }
+
+        // 2. Standard Request URI
         $uri = $this->server['REQUEST_URI'] ?? '/';
         if (($pos = strpos($uri, '?')) !== false) {
             $uri = substr($uri, 0, $pos);
         }
-        return rtrim($uri, '/') ?: '/';
+
+        $uri = '/' . trim($uri, '/');
+
+        // 3. Subdirectory Base Path Resolution (e.g. /tomvishimpro/public or /tomvishimpro)
+        $appUrl = Config::get('app.url', '');
+        if (!empty($appUrl)) {
+            $parsedUrl = parse_url($appUrl);
+            $basePath = rtrim($parsedUrl['path'] ?? '', '/');
+            if (!empty($basePath) && str_starts_with($uri, $basePath)) {
+                $uri = substr($uri, strlen($basePath));
+                $uri = '/' . trim($uri, '/');
+            }
+        }
+
+        return $uri === '/' ? '/' : $uri;
     }
 
     public function input(string $key, mixed $default = null): mixed
